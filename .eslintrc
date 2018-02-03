@@ -1,0 +1,27 @@
+{    
+  //继承共享配置，即我们下载的javacript-style-standard
+  "extends": "standard", 
+  "env": { //你的脚本将要运行在什么环境中
+    "browser": true,
+    "node": true,
+    "es6": true
+  },
+  "parserOptions": { //指定支持的js语言选项
+    "ecmaVersion": 6, //es6语法
+    "sourceType": "module" //使用模块
+  },
+  "rules": { //规则
+    "indent": [
+      0
+    ],
+    "no-new": [ //new的时候必须要赋给一个值
+      0 //关闭规则
+    ],
+    "no-tabs": [
+      0
+    ],
+    "no-cond-assign": [ //括号里的表达式必须要再括一层
+      0
+    ]
+  }
+}

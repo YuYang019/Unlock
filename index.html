@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>canvas</title>
+  <style>
+    #canvas-wrapper {
+      position: relative;
+    }
+    #bottom-canvas, #mid-canvas, #top-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <h1>canvas</h1>
+    <p>A project named canvas</p>
+    <div id="canvas-wrapper">
+      <canvas id="bottom-canvas"></canvas>
+      <canvas id="mid-canvas"></canvas>
+    </div>
+    <div class="tips"></div>
+  </div>
+  <script src="bundle.js"></script>
+</body>
+</html>
