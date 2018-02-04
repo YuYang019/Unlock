@@ -1,6 +1,6 @@
-export function addEvent (el, type, handler) {
+export function addEvent (el, type, handler, options) {
 	if (el.addEventListener) {
-		el.addEventListener(type, handler, false)
+		el.addEventListener(type, handler, options)
 	} else if (el.attachEvent) {
 		el.attachEvent('on' + type, handler)
 	} else {

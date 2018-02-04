@@ -2,7 +2,7 @@ import { addEvent } from './src/utils'
 
 const bottomCanvas = document.getElementById('bottom-canvas')
 const midCanvas = document.getElementById('mid-canvas')
-const topCanvas = document.getElementById('top-canvas')
+// const topCanvas = document.getElementById('top-canvas')
 
 const bottomCtx = bottomCanvas.getContext('2d')
 const midCtx = midCanvas.getContext('2d')
@@ -19,9 +19,6 @@ bottomCanvas.height = clientWidth
 
 midCanvas.width = clientWidth
 midCanvas.height = clientWidth
-
-topCanvas.width = clientWidth
-topCanvas.height = clientWidth
 
 const PI = Math.PI
 
@@ -45,8 +42,32 @@ function drawDot (arr) {
   arr.forEach((dot) => {
     const radius = 5
     arc(bottomCtx, dot.x, dot.y, radius)
-    console.log(1)
   })
+}
+
+// 数组里是否包含某个obj, 仅判断一层
+function includes (arr, obj) {
+  if (arr.includes(obj)) {
+    return true
+  }
+  for (let i = 0; i < arr.length; i++) {
+    const item = arr[i]
+    const keys = Object.keys(obj)
+    const itemKeys = Object.keys(item)
+    if (keys.length !== itemKeys.length) {
+      continue
+    }
+    for (let j = 0; j < keys.length; j++) {
+      const key = keys[j]
+      if (item[key] !== obj[key]) {
+        break
+      }
+      if (j === keys.length - 1 && i === arr.length - 1) {
+        return true
+      }
+    }
+  }
+  return false
 }
 
 function arc (ctx, x, y, radius) {
@@ -107,11 +128,11 @@ function distance (a, b) {
 
 // 找最近的点，且已在历史里的点不可获取
 function findNearDot (now) {
-  let minDistance = Math.sqrt(2 * d * d) / 8
+  let minDistance = Math.sqrt(2 * d * d) / 6
   for (let i = 0; i < dots.length; i++) {
     const dot = dots[i]
     const temp = distance(dot, now)
-    if (temp < minDistance && !history.includes(dot)) {
+    if (temp < minDistance && !includes(history, dot)) {
       return dot
     }
   }
@@ -128,7 +149,7 @@ function judgeLine (dot1, dot2) {
   } else if (dot1.x === dot2.x) {
     result.bool = true
     result.type = 'vertical'
-  } else if ((dot1.x - dot2.x) / (dot1.y - dot2.y) === 1) {
+  } else if (Math.abs((dot1.x - dot2.x) / (dot1.y - dot2.y)) === 1) {
     result.bool = true
     result.type = 'diagonal'
   } else {
@@ -152,7 +173,7 @@ let history = []
 let loading = false
 
 function addHistory (dot) {
-  if (!history.includes(dot)) {
+  if (!includes(history, dot)) {
     const beforeDot = history[history.length - 1]
     const judeResult = judgeLine(dot, beforeDot)
     if (history.length >= 1 || (judeResult && judeResult.bool)) {
@@ -180,7 +201,9 @@ function fixHorizontalLine (now, before) {
   // 如果两点距离大于单位距离,添加中间的点
   if (Math.abs(now.x - before.x) > d) {
     const midIndex = getMidIndex(now, before)
-    history.push(dots[midIndex])
+    if (!includes(history, dots[midIndex])) {
+      history.push(dots[midIndex])
+    }
   }
   history.push(now)
 }
@@ -189,7 +212,9 @@ function fixHorizontalLine (now, before) {
 function fixVerticalLine (now, before) {
   if (Math.abs(now.y - before.y) > d) {
     const midIndex = getMidIndex(now, before)
-    history.push(dots[midIndex])
+    if (!includes(history, dots[midIndex])) {
+      history.push(dots[midIndex])
+    }
   }
   history.push(now)
 }
@@ -198,7 +223,10 @@ function fixVerticalLine (now, before) {
 function fixDiagonalLine (now, before) {
   if (Math.abs(now.x - before.x) > d) {
     const midIndex = getMidIndex(now, before)
-    history.push(dots[midIndex])
+    if (!includes(history, dots[midIndex])) {
+      log(dots[midIndex], history)
+      history.push(dots[midIndex])
+    }
   }
   history.push(now)
 }
@@ -211,32 +239,31 @@ function getMidIndex (now, before) {
   return midIndex
 }
 
-addEvent(topCanvas, 'touchstart', (e) => {
+addEvent(midCanvas, 'touchstart', (e) => {
   start = ''
   history = []
   midCtx.clearRect(0, 0, clientWidth, clientWidth)
   if (loading) return
-  const point = getCanvasPoints(topCanvas, e.changedTouches[0].clientX, e.changedTouches[0].clientY)
+  const point = getCanvasPoints(midCanvas, e.changedTouches[0].clientX, e.changedTouches[0].clientY)
   start = findNearDot(point)
   if (start) addHistory(start)
-})
+}, { passive: false })
 
-addEvent(topCanvas, 'touchmove', (e) => {
+addEvent(midCanvas, 'touchmove', (e) => {
   if (!start || loading) return
   midCtx.clearRect(0, 0, clientWidth, clientWidth)
-  const now = getCanvasPoints(topCanvas, e.changedTouches[0].clientX, e.changedTouches[0].clientY)
+  const now = getCanvasPoints(midCanvas, e.changedTouches[0].clientX, e.changedTouches[0].clientY)
   const nearDot = findNearDot(now)
   if (nearDot) {
     addNearLine(midCtx, start, nearDot)
     addHistory(nearDot)
-    log(history)
     start = nearDot
   } else {
     addNearLine(midCtx, start, now)
   }
-})
+}, { passive: false })
 
-addEvent(topCanvas, 'touchend', (e) => {
+addEvent(midCanvas, 'touchend', (e) => {
   midCtx.clearRect(0, 0, clientWidth, clientWidth)
   if (history.length <= 1 || loading) return
   loading = true
@@ -244,10 +271,11 @@ addEvent(topCanvas, 'touchend', (e) => {
   setTimeout(() => {
     start = ''
     loading = false
+    log(history)
     history = []
     midCtx.clearRect(0, 0, clientWidth, clientWidth)
   }, 3000)
-})
+}, { passive: false })
 
 function check () {
   const result = history.map(item => item.index).join('')
@@ -262,7 +290,6 @@ function check () {
 
 function drawErrorLine () {
   midCtx.clearRect(0, 0, clientWidth, clientWidth)
-  log(history)
   if (history.length) {
     for (let i = 0; i < history.length; i++) {
       line(midCtx, history[i], history[i + 1], 'error')
@@ -280,7 +307,5 @@ function drawSuccessLine () {
   }
   tips.innerHTML = '密码正确'
 }
-
-log(dots)
 
 drawDot(dots)
