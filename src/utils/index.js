@@ -22,6 +22,37 @@ export function $ (el) {
 	return document.querySelector(el)
 }
 
+// 数组里是否包含某个obj, 仅判断一层
+export function includes (arr, obj) {
+  if (arr.includes(obj)) {
+    return true
+  }
+  for (let i = 0; i < arr.length; i++) {
+    const item = arr[i]
+    const keys = Object.keys(obj)
+    const itemKeys = Object.keys(item)
+    if (keys.length !== itemKeys.length) {
+      continue
+    }
+    for (let j = 0; j < keys.length; j++) {
+      const key = keys[j]
+      if (item[key] !== obj[key]) {
+        break
+      }
+      if (j === keys.length - 1 && i === arr.length - 1) {
+        return true
+      }
+    }
+  }
+  return false
+}
+
+export function getDistance (a, b) {
+  const x2 = Math.pow(a.x - b.x, 2)
+  const y2 = Math.pow(a.y - b.y, 2)
+  return Math.sqrt(x2 + y2)
+}
+
 export function getStyle (el, name) {
 	if (el.currentStyle) {
 		return el.currentStyle[name]
@@ -129,7 +160,7 @@ export const _ = {
 		return Object.prototype.toString.call(string) === '[object String]'
 	},
 	isObject (obj) {
-		return typeof obj === 'object'
+		return Object.prototype.toString.call(obj) === '[object Object]'
 	},
 	isElementNode (node) {
 		return node.nodeType === 1
