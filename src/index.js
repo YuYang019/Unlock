@@ -24,6 +24,10 @@ const defaultStyle = {
   }
 }
 
+const defaultSet = {
+  beforeRepeat: function () {}
+}
+
 function Unlock (options) {
   if (!_.isObject(options)) {
     warn('the options should be a object')
@@ -31,6 +35,7 @@ function Unlock (options) {
   this.$options = options
   this.$style = options.style ? merge(defaultStyle, options.style) : defaultStyle
   this.$el = typeof options.el === 'string' ? $(options.el) : options.el
+  this.$set = options.set ? merge(defaultSet, options.set) : defaultSet
   if (!this.$el) {
     warn('can not resolve wrapper dom')
   }
@@ -78,20 +83,16 @@ export default Unlock
 // btn.onClick = () => {
 //   lock
 //     .set()
-//     .then(res => {
-//       if (res.status === 1) {
-//         console.log('设置失败,两次输入不一致')
-//       } else {
-//         localStorage.setItem('pw', res.password)
-//       }
-//     })
+//     .success((pw) => { console.log('1') })
+//     .error(() => { console.log('2') })
 // }
 
 // btn2.onClick = () => {
 //   const pw = localStorage.getItem('pw')
-//   lock.check(pw).then(res => {
-//     console.log(res)
-//   })
+//   lock
+//     .check(pw)
+//     .success(() => { console.log('1') })
+//     .fail(() => { console.log('2') })
 // }
 
 // btn3.onClick = () => {

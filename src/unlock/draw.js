@@ -41,12 +41,16 @@ function drawMixin (Unlock) {
   // 当滑动到某个最近的点时，按照记录依次连接，最后连接最新的线
   Unlock.prototype.drawNewLine = function (ctx, old, now) {
     if (!old || !now) return
+    this.drawHistoryLine(ctx)
+    this.drawLine(ctx, old, now)
+  }
+
+  Unlock.prototype.drawHistoryLine = function (ctx) {
     if (this.$history.length) {
       for (let i = 0; i < this.$history.length; i++) {
         this.drawLine(ctx, this.$history[i], this.$history[i + 1])
       }
     }
-    this.drawLine(ctx, old, now)
   }
 
   Unlock.prototype.clear = function (canvas) {

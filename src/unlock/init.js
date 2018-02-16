@@ -1,4 +1,5 @@
 import { addEvent } from '../utils'
+import { DEFAULT_MODE } from '../constants'
 
 const w = document.body.clientWidth
 
@@ -7,6 +8,7 @@ function initMixin (Unlock) {
     this.$d = Math.round(w / 4)
     this.$dots = []
     this.$history = []
+    this.$mode = DEFAULT_MODE
 
     this._initDots()
     this._initCanvas()
@@ -18,6 +20,8 @@ function initMixin (Unlock) {
     const topCanvas = document.createElement('canvas')
 
     this.$el.style.position = 'relative'
+    this.$el.style.width = `${w}px`
+    this.$el.style.height = `${w}px`
 
     bottomCanvas.width = w
     bottomCanvas.height = w

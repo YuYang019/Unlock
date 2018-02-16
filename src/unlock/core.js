@@ -1,4 +1,7 @@
-import { includes, getDistance } from '../utils'
+import { includes, getDistance, warn } from '../utils'
+import { DEFAULT_MODE, SET_MODE, CHECK_MODE } from '../constants'
+
+let PASSWORD = '' // 密码放在全局，放在this上会被看到
 
 function coreMixin (Unlock) {
   Unlock.prototype.getCanvasPoint = function (canvas, x, y) {
@@ -165,24 +168,132 @@ function coreMixin (Unlock) {
     if (this.$history.length <= 1 || loading) return
 
     loading = true
-    this.check()
+
+    this.drawHistoryLine(this.$topCanvas.getContext('2d'))
+
+    switch (this.$mode) {
+      case DEFAULT_MODE:
+        this.handleDefaultMode()
+        break
+      case CHECK_MODE:
+        this.handleCheckMode()
+        break
+      case SET_MODE:
+        this.handleSetMode()
+        break
+      default:
+        warn('unknown mode')
+    }
+  }
+
+  Unlock.prototype.handleDefaultMode = function () {
     setTimeout(() => {
       startDot = null
       loading = false
       this.$history = []
       this.clear(this.$topCanvas)
-    }, 3000)
+    }, 1000)
   }
 
-  const pw = '123456789'
-  Unlock.prototype.check = function () {
+  Unlock.prototype.handleCheckMode = function () {
     const history = this.$history
     const result = history.map(item => item.index).join('')
-    if (pw === result) {
+
+    if (PASSWORD === result) {
+      this._success && this._success.call()
       this.drawSuccessLine()
+      PASSWORD = ''
     } else {
+      this._fail && this._fail.call()
       this.drawErrorLine()
+      PASSWORD = ''
     }
+
+    setTimeout(() => {
+      startDot = null
+      loading = false
+      this.$history = []
+      this.clear(this.$topCanvas)
+    }, 1500)
+  }
+
+  let first = ''
+  let repeat = false
+  Unlock.prototype.handleSetMode = function () {
+    const history = this.$history
+    const result = history.map(item => item.index).join('')
+
+    if (!repeat) {
+      repeat = true
+      first = result
+      console.log(1)
+      setTimeout(() => {
+        startDot = null
+        loading = false
+        this.$history = []
+        console.log('clear')
+        this.clear(this.$topCanvas)
+      }, 2000)
+      return this.$set.beforeRepeat.call()
+    }
+
+    if (result === first) {
+      this._success && this._success.call(null, result)
+      this.drawSuccessLine()
+      setTimeout(() => {
+        first = ''
+        repeat = false
+        startDot = null
+        loading = false
+        this.$history = []
+        this.clear(this.$topCanvas)
+      }, 2000)
+    } else {
+      this._fail && this._fail.call()
+      this.drawErrorLine()
+      setTimeout(() => {
+        // first = ''
+        // repeat = false
+        startDot = null
+        loading = false
+        this.$history = []
+        this.clear(this.$topCanvas)
+      }, 2000)
+    }
+  }
+
+  Unlock.prototype.set = function () {
+    this.$mode = SET_MODE
+
+    return this
+  }
+
+  Unlock.prototype.reset = function () {
+    first = ''
+    repeat = false
+    startDot = null
+    loading = false
+    this.$history = []
+    this.clear(this.$topCanvas)
+  }
+
+  Unlock.prototype.check = function (password) {
+    this.$mode = CHECK_MODE
+    PASSWORD = password
+
+    return this
+  }
+
+  Unlock.prototype.success = function (fn) {
+    this._success = fn
+
+    return this
+  }
+
+  Unlock.prototype.fail = function (fn) {
+    this._fail = fn
+
+    return this
   }
 }
 
