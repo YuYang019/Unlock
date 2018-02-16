@@ -6,6 +6,26 @@ const unlock = new Unlock({
     beforeRepeat: function () {
       console.log('请再次输入密码')
     }
+  },
+  style: {
+    bgColor: '#fff',
+    dotColor: '#e6e6e6',
+    dotRadius: 5,
+    lineWidth: 10,
+    statusColor: {
+      'default': {
+        line: 'rgba(0, 0, 0, 0.3)',
+        dot: 'rgba(0, 0, 0, 0.6)'
+      },
+      'error': {
+        line: 'rgba(255, 0, 0, 0.3)',
+        dot: 'rgba(255, 0, 0, 0.6)'
+      },
+      'success': {
+        line: 'rgba(0, 255, 0, 0.3)',
+        dot: 'rgba(0, 255, 0, 0.6)'
+      }
+    }
   }
 })
 
@@ -16,7 +36,6 @@ const btn3 = document.getElementById('btn3')
 const pw = '123456'
 
 btn1.onclick = function () {
-  console.log(1)
   unlock
     .check(pw)
     .success(() => { console.log('check success') })
@@ -24,7 +43,6 @@ btn1.onclick = function () {
 }
 
 btn2.onclick = function () {
-  console.log(2)
   unlock
     .set()
     .success((pw) => { console.log(pw) })
