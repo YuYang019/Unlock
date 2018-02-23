@@ -1,7 +1,11 @@
 import { includes, getDistance, warn } from '../utils'
 import { DEFAULT_MODE, SET_MODE, CHECK_MODE } from '../constants'
 
-let PASSWORD = '' // 密码放在全局，放在this上会被看到
+let CHECK_PASSWORD = '' // 密码放在全局
+let startDot = null // 最开始连线的点
+let loading = false
+let first = '' // set模式下，第一次设置的密码
+let repeat = false // set模式下，是否是第一次设置
 
 function coreMixin (Unlock) {
   Unlock.prototype.getCanvasPoint = function (canvas, x, y) {
@@ -128,9 +132,6 @@ function coreMixin (Unlock) {
     return midIndex
   }
 
-  let startDot = null
-  let loading = false
-
   Unlock.prototype.handleTouchStart = function (e) {
     startDot = null
     this.$history = []
@@ -199,26 +200,21 @@ function coreMixin (Unlock) {
     const history = this.$history
     const result = history.map(item => item.index).join('')
 
-    if (PASSWORD === result) {
+    if (CHECK_PASSWORD === result) {
       this._success && this._success.call()
       this.drawSuccessLine()
-      PASSWORD = ''
+      // CHECK_PASSWORD = ''
     } else {
       this._fail && this._fail.call()
       this.drawErrorLine()
-      PASSWORD = ''
+      // CHECK_PASSWORD = ''
     }
 
     setTimeout(() => {
-      startDot = null
-      loading = false
-      this.$history = []
-      this.clear(this.$topCanvas)
+      this.reset()
     }, 1500)
   }
 
-  let first = ''
-  let repeat = false
   Unlock.prototype.handleSetMode = function () {
     const history = this.$history
     const result = history.map(item => item.index).join('')
@@ -226,13 +222,8 @@ function coreMixin (Unlock) {
     if (!repeat) {
       repeat = true
       first = result
-      console.log(1)
       setTimeout(() => {
-        startDot = null
-        loading = false
-        this.$history = []
-        console.log('clear')
-        this.clear(this.$topCanvas)
+        this._resetAll(false)
       }, 2000)
       return this.$set.beforeRepeat.call()
     }
@@ -241,23 +232,13 @@ function coreMixin (Unlock) {
       this._success && this._success.call(null, result)
       this.drawSuccessLine()
       setTimeout(() => {
-        first = ''
-        repeat = false
-        startDot = null
-        loading = false
-        this.$history = []
-        this.clear(this.$topCanvas)
+        this._resetAll(true)
       }, 2000)
     } else {
       this._fail && this._fail.call()
       this.drawErrorLine()
       setTimeout(() => {
-        // first = ''
-        // repeat = false
-        startDot = null
-        loading = false
-        this.$history = []
-        this.clear(this.$topCanvas)
+        this._resetAll(false)
       }, 2000)
     }
   }
@@ -269,8 +250,14 @@ function coreMixin (Unlock) {
   }
 
   Unlock.prototype.reset = function () {
-    first = ''
-    repeat = false
+    this._resetAll(true)
+  }
+
+  Unlock.prototype._resetAll = function (all) {
+    if (all) {
+      first = ''
+      repeat = false
+    }
     startDot = null
     loading = false
     this.$history = []
@@ -279,7 +266,7 @@ function coreMixin (Unlock) {
 
   Unlock.prototype.check = function (password) {
     this.$mode = CHECK_MODE
-    PASSWORD = password
+    CHECK_PASSWORD = password
 
     return this
   }
