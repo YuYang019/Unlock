@@ -1,11 +1,11 @@
-import { includes, getDistance, warn } from '../utils'
-import { DEFAULT_MODE, SET_MODE, CHECK_MODE } from '../constants'
+import { includes, getDistance, warn, _ } from '../utils/index'
+import { DEFAULT_MODE, SET_MODE, CHECK_MODE } from '../constants/index'
 
 let CHECK_PASSWORD = '' // 密码放在全局
 let startDot = null // 最开始连线的点
 let loading = false
-let first = '' // set模式下，第一次设置的密码
-let repeat = false // set模式下，是否是第一次设置
+let firstPassword = '' // set模式下，第一次设置的密码
+let isFirst = true // set模式下，是否是第一次设置
 
 function coreMixin (Unlock) {
   Unlock.prototype.getCanvasPoint = function (canvas, x, y) {
@@ -132,38 +132,49 @@ function coreMixin (Unlock) {
     return midIndex
   }
 
-  Unlock.prototype.handleTouchStart = function (e) {
+  Unlock.prototype._start = function (e) {
     startDot = null
     this.$history = []
     this.clear(this.$topCanvas)
 
     if (loading) return
 
-    const point = this.getCanvasPoint(this.$topCanvas, e.changedTouches[0].clientX, e.changedTouches[0].clientY)
+    const pos = {
+      x: e.clientX || e.changedTouches[0].clientX,
+      y: e.clientY || e.changedTouches[0].clientY
+    }
+
+    const point = this.getCanvasPoint(this.$topCanvas, pos.x, pos.y)
     startDot = this.findNearDot(point)
 
     if (startDot) this.addHistory(startDot)
   }
 
-  Unlock.prototype.handleTouchMove = function (e) {
+  Unlock.prototype._move = function (e) {
     if (!startDot || loading) return
 
     this.clear(this.$topCanvas)
 
+    const pos = {
+      x: e.clientX || e.changedTouches[0].clientX,
+      y: e.clientY || e.changedTouches[0].clientY
+    }
+
     const topCtx = this.$topCanvas.getContext('2d')
-    const now = this.getCanvasPoint(this.$topCanvas, e.changedTouches[0].clientX, e.changedTouches[0].clientY)
+    const now = this.getCanvasPoint(this.$topCanvas, pos.x, pos.y)
     const nearDot = this.findNearDot(now)
 
     if (nearDot) {
       this.drawNewLine(topCtx, startDot, nearDot)
       this.addHistory(nearDot)
+      // 更新起始点
       startDot = nearDot
     } else {
       this.drawNewLine(topCtx, startDot, now)
     }
   }
 
-  Unlock.prototype.handleTouchEnd = function (e) {
+  Unlock.prototype._end = function (e) {
     this.clear(this.$topCanvas)
 
     if (this.$history.length <= 1 || loading) return
@@ -193,7 +204,7 @@ function coreMixin (Unlock) {
       loading = false
       this.$history = []
       this.clear(this.$topCanvas)
-    }, 1000)
+    }, this.$options.intervalTime)
   }
 
   Unlock.prototype.handleCheckMode = function () {
@@ -212,38 +223,40 @@ function coreMixin (Unlock) {
 
     setTimeout(() => {
       this.reset()
-    }, 1500)
+    }, this.$options.intervalTime)
   }
 
   Unlock.prototype.handleSetMode = function () {
     const history = this.$history
-    const result = history.map(item => item.index).join('')
+    const password = history.map(item => item.index).join('')
 
-    if (!repeat) {
-      repeat = true
-      first = result
+    if (isFirst) {
+      isFirst = false
+      firstPassword = password
       setTimeout(() => {
         this._resetAll(false)
-      }, 2000)
-      return this.$set.beforeRepeat.call()
+      }, this.$options.intervalTime)
+      return this.$options.set.beforeRepeat.call()
     }
 
-    if (result === first) {
-      this._success && this._success.call(null, result)
+    if (password === firstPassword) {
+      this._success && this._success.call(null, password)
       this.drawSuccessLine()
       setTimeout(() => {
         this._resetAll(true)
-      }, 2000)
+      }, this.$options.intervalTime)
     } else {
       this._fail && this._fail.call()
       this.drawErrorLine()
       setTimeout(() => {
         this._resetAll(false)
-      }, 2000)
+      }, this.$options.intervalTime)
     }
   }
 
   Unlock.prototype.set = function () {
+    this._fail = null
+    this._success = null
     this.$mode = SET_MODE
 
     return this
@@ -255,8 +268,8 @@ function coreMixin (Unlock) {
 
   Unlock.prototype._resetAll = function (all) {
     if (all) {
-      first = ''
-      repeat = false
+      firstPassword = ''
+      isFirst = true
     }
     startDot = null
     loading = false
@@ -265,6 +278,8 @@ function coreMixin (Unlock) {
   }
 
   Unlock.prototype.check = function (password) {
+    this._fail = null
+    this._success = null
     this.$mode = CHECK_MODE
     CHECK_PASSWORD = password
 
@@ -272,12 +287,14 @@ function coreMixin (Unlock) {
   }
 
   Unlock.prototype.success = function (fn) {
+    if (!_.isFunction(fn)) warn('the callback should be a function')
     this._success = fn
 
     return this
   }
 
   Unlock.prototype.fail = function (fn) {
+    if (!_.isFunction(fn)) warn('the callback should be a function')
     this._fail = fn
 
     return this

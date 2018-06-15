@@ -4,7 +4,7 @@ const w = document.body.clientWidth
 function drawMixin (Unlock) {
   Unlock.prototype.drawDots = function (dots, ctx) {
     dots.forEach((dot) => {
-      const radius = this.$style.dotRadius
+      const radius = this.$options.style.dotRadius
       this.drawArc(ctx, dot.x, dot.y, radius)
     })
   }
@@ -12,7 +12,7 @@ function drawMixin (Unlock) {
   Unlock.prototype.drawArc = function (ctx, x, y, radius) {
     ctx.beginPath()
     ctx.arc(x, y, radius, 0, 2 * PI)
-    ctx.fillStyle = this.$style.dotColor
+    ctx.fillStyle = this.$options.style.dotColor
     ctx.fill()
   }
 
@@ -20,9 +20,9 @@ function drawMixin (Unlock) {
     now = now || old
     type = type || 'default'
 
-    const lineColor = this.$style.statusColor[type].line
-    const dotColor = this.$style.statusColor[type].dot
-    const lineWidth = this.$style.lineWidth
+    const lineColor = this.$options.style.statusColor[type].line
+    const dotColor = this.$options.style.statusColor[type].dot
+    const lineWidth = this.$options.style.lineWidth
 
     ctx.strokeStyle = lineColor
     ctx.lineWidth = lineWidth

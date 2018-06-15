@@ -1,47 +1,42 @@
-import { addEvent } from '../utils'
-import { DEFAULT_MODE } from '../constants'
+import { addEvent, removeEvent } from '../utils/index'
+import { createCanvas } from '../utils/dom'
+import { DEFAULT_MODE } from '../constants/index'
 
 const w = document.body.clientWidth
 
 function initMixin (Unlock) {
   Unlock.prototype._init = function () {
-    this.$d = Math.round(w / 4)
+    this.$d = this._elWidth ? Math.round(this._elWidth / 4) : Math.round(w / 4) // 两点间距离
     this.$dots = []
     this.$history = []
     this.$mode = DEFAULT_MODE
 
     this._initDots()
     this._initCanvas()
-    this._initEvent()
+    this._addDomEvent()
   }
 
   Unlock.prototype._initCanvas = function () {
-    const bottomCanvas = document.createElement('canvas')
-    const topCanvas = document.createElement('canvas')
-
     this.$el.style.position = 'relative'
-    this.$el.style.width = `${w}px`
-    this.$el.style.height = `${w}px`
+    if (this._elWidth === 0) {
+      this.$el.style.width = `${w}px`
+      this._elWidth = w
+    }
+    if (this._elHeight === 0) {
+      this.$el.style.height = `${w}px`
+      this._elHeight = w
+    }
+    if (this.$options.style.bgColor) {
+      this.$el.style.backgroundColor = this.$options.style.bgColor
+    }
 
-    bottomCanvas.width = w
-    bottomCanvas.height = w
-    bottomCanvas.style.position = 'absolute'
-    bottomCanvas.style.top = 0
-    bottomCanvas.style.left = 0
+    this.$bottomCanvas = createCanvas(this._elWidth, this._elHeight)
+    this.$topCanvas = createCanvas(this._elWidth, this._elHeight)
 
-    topCanvas.width = w
-    topCanvas.height = w
-    topCanvas.style.position = 'absolute'
-    topCanvas.style.top = 0
-    topCanvas.style.left = 0
+    this.$el.appendChild(this.$bottomCanvas)
+    this.$el.appendChild(this.$topCanvas)
 
-    this.$el.appendChild(bottomCanvas)
-    this.$el.appendChild(topCanvas)
-
-    this.$bottomCanvas = bottomCanvas
-    this.$topCanvas = topCanvas
-
-    this.drawDots(this.$dots, bottomCanvas.getContext('2d'))
+    this.drawDots(this.$dots, this.$bottomCanvas.getContext('2d'))
   }
 
   Unlock.prototype._initDots = function () {
@@ -57,10 +52,39 @@ function initMixin (Unlock) {
     }
   }
 
-  Unlock.prototype._initEvent = function () {
-    addEvent(this.$topCanvas, 'touchstart', this.handleTouchStart.bind(this), { passive: false })
-    addEvent(this.$topCanvas, 'touchmove', this.handleTouchMove.bind(this), { passive: false })
-    addEvent(this.$topCanvas, 'touchend', this.handleTouchEnd.bind(this), { passive: false })
+  Unlock.prototype._addDomEvent = function () {
+    this._initEvent(addEvent)
+  }
+
+  Unlock.prototype._removeDomEvent = function () {
+    this._initEvent(removeEvent)
+  }
+
+  Unlock.prototype._initEvent = function (eventOperator) {
+    if (this.$options.click) {
+      eventOperator(this.$topCanvas, 'mousedown', this)
+      eventOperator(this.$topCanvas, 'mousemove', this)
+      eventOperator(this.$topCanvas, 'mouseup', this)
+    }
+    eventOperator(this.$topCanvas, 'touchstart', this)
+    eventOperator(this.$topCanvas, 'touchmove', this)
+    eventOperator(this.$topCanvas, 'touchend', this)
+  }
+
+  Unlock.prototype.handleEvent = function (e) {
+    switch (e.type) {
+      case 'mousedown':
+      case 'touchstart':
+        this._start(e)
+        break
+      case 'mousemove':
+      case 'touchmove':
+        this._move(e)
+        break
+      case 'mouseup':
+      case 'touchend':
+        this._end(e)
+    }
   }
 }
 

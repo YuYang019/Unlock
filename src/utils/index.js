@@ -55,9 +55,9 @@ export function getDistance (a, b) {
 
 export function getStyle (el, name) {
 	if (el.currentStyle) {
-		return el.currentStyle[name]
+    return name ? el.currentStyle[name] : el.currentStyle
 	} else {
-		return Number(getComputedStyle(el, false)[name].replace(/px/, ''))
+		return name ? Number(getComputedStyle(el, false)[name].replace(/px/, '')) : getComputedStyle(el, false)
 	}
 }
 
@@ -152,7 +152,10 @@ export const _ = {
 	},
 	isArray (array) {
 		return Object.prototype.toString.call(array) === '[object Array]'
-	},
+  },
+  isFunction (fn) {
+    return typeof fn === 'function'
+  },
 	toArray (arrLike) {
 		return Array.from(arrLike)
 	},

@@ -9,9 +9,9 @@
 ## usage
 
 ```
-const unlock = new Unlock({
-  el: '#canvas-wrapper',
+const unlock = new Unlock('#canvas-wrapper', {
   set: {
+    // 设置第一次后的回调
     beforeRepeat: function () {
       console.log('请再次输入密码')
     }
@@ -107,6 +107,9 @@ btn3.onclick = function () {
 
 失败时调用对应方法
 
+### tips
+验证和设置之间是没有逻辑关系的，设置密码后仅会触发参数为密码的回调，之后的具体逻辑，比如跳到验证，还是其他的需要自己实现，这也是出于设计考虑
+
 ### 原理
 
 基本原理就是监听事件，然后连线。canvas分两层，底层放九个基本点，顶层放连的线。分三层似乎更好，但是懒得弄了
@@ -132,8 +135,6 @@ btn3.onclick = function () {
 之后确定了提供设置和验证两个基本功能，。然后又思考了一下接口怎么用才爽，最后确定链式调用。
 
 至于实现，有些地方我感觉实现的挺挫的，但是能力有限，想不到好的了。等以后再来改
-
-说了这么多，其实也没人用，hhh
 
 ### todos
 

@@ -1,7 +1,6 @@
 import Unlock from './src'
 
-const unlock = new Unlock({
-  el: '#canvas-wrapper',
+const unlock = new Unlock('#canvas-wrapper', {
   set: {
     beforeRepeat: function () {
       console.log('请再次输入密码')
