@@ -144,7 +144,7 @@
 
 	let CHECK_PASSWORD = ''; // 密码放在全局
 	let startDot = null; // 最开始连线的点
-	let loading = false;
+	let start = false; // 是否开始连线
 	let firstPassword = ''; // set模式下，第一次设置的密码
 	let isFirst = true; // set模式下，是否是第一次设置
 
@@ -274,11 +274,7 @@
 	  };
 
 	  Unlock.prototype._start = function (e) {
-	    startDot = null;
-	    this.$history = [];
-	    this.clear(this.$topCanvas);
-
-	    if (loading) return
+	    start = true;
 
 	    const pos = {
 	      x: e.clientX || e.changedTouches[0].clientX,
@@ -292,7 +288,7 @@
 	  };
 
 	  Unlock.prototype._move = function (e) {
-	    if (!startDot || loading) return
+	    if (!startDot || !start) return
 
 	    this.clear(this.$topCanvas);
 
@@ -318,9 +314,16 @@
 	  Unlock.prototype._end = function (e) {
 	    this.clear(this.$topCanvas);
 
-	    if (this.$history.length <= 1 || loading) return
+	    start = false;
+	    console.log(this.$history);
+	    // 如果只有一个点，不画
+	    if (this.$history.length <= 1) {
+	      startDot = null;
+	      this.$history = [];
+	      return
+	    }
 
-	    loading = true;
+	    this._loading = true;
 
 	    this.drawHistoryLine(this.$topCanvas.getContext('2d'));
 
@@ -341,10 +344,7 @@
 
 	  Unlock.prototype.handleDefaultMode = function () {
 	    setTimeout(() => {
-	      startDot = null;
-	      loading = false;
-	      this.$history = [];
-	      this.clear(this.$topCanvas);
+	      this._resetAll(false);
 	    }, this.$options.intervalTime);
 	  };
 
@@ -363,7 +363,7 @@
 	    }
 
 	    setTimeout(() => {
-	      this.reset();
+	      this._resetAll(true);
 	    }, this.$options.intervalTime);
 	  };
 
@@ -413,7 +413,7 @@
 	      isFirst = true;
 	    }
 	    startDot = null;
-	    loading = false;
+	    this._loading = false;
 	    this.$history = [];
 	    this.clear(this.$topCanvas);
 	  };
@@ -463,6 +463,8 @@
 	    this.$history = [];
 	    this.$mode = DEFAULT_MODE;
 
+	    this._loading = false;
+
 	    this._initDots();
 	    this._initCanvas();
 	    this._addDomEvent();
@@ -470,6 +472,7 @@
 
 	  Unlock.prototype._initCanvas = function () {
 	    this.$el.style.position = 'relative';
+	    this.$el.style.userSelect = 'none';
 	    if (this._elWidth === 0) {
 	      this.$el.style.width = `${w}px`;
 	      this._elWidth = w;
@@ -524,6 +527,8 @@
 	  };
 
 	  Unlock.prototype.handleEvent = function (e) {
+	    if (this._loading) return
+
 	    switch (e.type) {
 	      case 'mousedown':
 	      case 'touchstart':
@@ -574,8 +579,8 @@
 	    ctx.stroke();
 
 	    ctx.beginPath();
-	    ctx.arc(old.x, old.y, 5, 0, 2 * PI);
-	    ctx.arc(now.x, now.y, 5, 0, 2 * PI);
+	    ctx.arc(old.x, old.y, this.$options.style.activeDotRadius, 0, 2 * PI);
+	    ctx.arc(now.x, now.y, this.$options.style.activeDotRadius, 0, 2 * PI);
 	    ctx.fillStyle = dotColor;
 	    ctx.fill();
 	  };
@@ -630,6 +635,7 @@
 	    bgColor: '#fff',
 	    dotColor: '#e6e6e6',
 	    dotRadius: 5,
+	    activeDotRadius: 5,
 	    lineWidth: 10,
 	    statusColor: {
 	      'default': {
@@ -670,56 +676,6 @@
 	drawMixin(Unlock);
 	initMixin(Unlock);
 	coreMixin(Unlock);
-
-	// const commonStyle = {
-	//   bgColor: '#fff',
-	//   dotColor: '#e6e6e6',
-	//   dotRadius: 5,
-	//   lineWidth: 10,
-	//   statusColor: {
-	//     'default': {
-	//       line: 'rgba(0, 0, 0, 0.3)',
-	//       dot: 'rgba(0, 0, 0, 0.6)'
-	//     },
-	//     'error': {
-	//       line: 'rgba(255, 0, 0, 0.3)',
-	//       dot: 'rgba(255, 0, 0, 0.6)'
-	//     },
-	//     'success': {
-	//       line: 'rgba(0, 255, 0, 0.3)',
-	//       dot: 'rgba(0, 255, 0, 0.6)'
-	//     }
-	//   }
-	// }
-
-	// const lock = new Unlock({
-	//   el: '#container',
-	//   set: {
-	//     beforeRepeat() {
-	//       console.log('请再次输入')
-	//     }
-	//   },
-	//   style: commonStyle,
-	// })
-
-	// btn.onClick = () => {
-	//   lock
-	//     .set()
-	//     .success((pw) => { console.log('1') })
-	//     .error(() => { console.log('2') })
-	// }
-
-	// btn2.onClick = () => {
-	//   const pw = localStorage.getItem('pw')
-	//   lock
-	//     .check(pw)
-	//     .success(() => { console.log('1') })
-	//     .fail(() => { console.log('2') })
-	// }
-
-	// btn3.onClick = () => {
-	//   lock.reset()
-	// }
 
 	return Unlock;
 

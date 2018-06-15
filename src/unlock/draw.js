@@ -32,8 +32,8 @@ function drawMixin (Unlock) {
     ctx.stroke()
 
     ctx.beginPath()
-    ctx.arc(old.x, old.y, 5, 0, 2 * PI)
-    ctx.arc(now.x, now.y, 5, 0, 2 * PI)
+    ctx.arc(old.x, old.y, this.$options.style.activeDotRadius, 0, 2 * PI)
+    ctx.arc(now.x, now.y, this.$options.style.activeDotRadius, 0, 2 * PI)
     ctx.fillStyle = dotColor
     ctx.fill()
   }

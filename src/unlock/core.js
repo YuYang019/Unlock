@@ -3,7 +3,7 @@ import { DEFAULT_MODE, SET_MODE, CHECK_MODE } from '../constants/index'
 
 let CHECK_PASSWORD = '' // 密码放在全局
 let startDot = null // 最开始连线的点
-let loading = false
+let start = false // 是否开始连线
 let firstPassword = '' // set模式下，第一次设置的密码
 let isFirst = true // set模式下，是否是第一次设置
 
@@ -133,11 +133,7 @@ function coreMixin (Unlock) {
   }
 
   Unlock.prototype._start = function (e) {
-    startDot = null
-    this.$history = []
-    this.clear(this.$topCanvas)
-
-    if (loading) return
+    start = true
 
     const pos = {
       x: e.clientX || e.changedTouches[0].clientX,
@@ -151,7 +147,7 @@ function coreMixin (Unlock) {
   }
 
   Unlock.prototype._move = function (e) {
-    if (!startDot || loading) return
+    if (!startDot || !start) return
 
     this.clear(this.$topCanvas)
 
@@ -177,9 +173,16 @@ function coreMixin (Unlock) {
   Unlock.prototype._end = function (e) {
     this.clear(this.$topCanvas)
 
-    if (this.$history.length <= 1 || loading) return
+    start = false
+    console.log(this.$history)
+    // 如果只有一个点，不画
+    if (this.$history.length <= 1) {
+      startDot = null
+      this.$history = []
+      return
+    }
 
-    loading = true
+    this._loading = true
 
     this.drawHistoryLine(this.$topCanvas.getContext('2d'))
 
@@ -200,10 +203,7 @@ function coreMixin (Unlock) {
 
   Unlock.prototype.handleDefaultMode = function () {
     setTimeout(() => {
-      startDot = null
-      loading = false
-      this.$history = []
-      this.clear(this.$topCanvas)
+      this._resetAll(false)
     }, this.$options.intervalTime)
   }
 
@@ -222,7 +222,7 @@ function coreMixin (Unlock) {
     }
 
     setTimeout(() => {
-      this.reset()
+      this._resetAll(true)
     }, this.$options.intervalTime)
   }
 
@@ -272,7 +272,7 @@ function coreMixin (Unlock) {
       isFirst = true
     }
     startDot = null
-    loading = false
+    this._loading = false
     this.$history = []
     this.clear(this.$topCanvas)
   }

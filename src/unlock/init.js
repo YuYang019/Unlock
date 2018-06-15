@@ -11,6 +11,8 @@ function initMixin (Unlock) {
     this.$history = []
     this.$mode = DEFAULT_MODE
 
+    this._loading = false
+
     this._initDots()
     this._initCanvas()
     this._addDomEvent()
@@ -18,6 +20,7 @@ function initMixin (Unlock) {
 
   Unlock.prototype._initCanvas = function () {
     this.$el.style.position = 'relative'
+    this.$el.style.userSelect = 'none'
     if (this._elWidth === 0) {
       this.$el.style.width = `${w}px`
       this._elWidth = w
@@ -72,6 +75,8 @@ function initMixin (Unlock) {
   }
 
   Unlock.prototype.handleEvent = function (e) {
+    if (this._loading) return
+
     switch (e.type) {
       case 'mousedown':
       case 'touchstart':

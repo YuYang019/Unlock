@@ -21,7 +21,8 @@ const unlock = new Unlock('#canvas-wrapper', {
   style: {
     bgColor: '#fff',
     dotColor: '#e6e6e6',
-    dotRadius: 5,
+    dotRadius: 5, // 默认点半径
+    activeDotRadius: 5, // 激活时点半径
     lineWidth: 10,
     statusColor: {
       'default': {
