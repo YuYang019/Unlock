@@ -10,6 +10,8 @@
 
 ```
 const unlock = new Unlock('#canvas-wrapper', {
+  click: true, //  开启点击事件
+  intervalTime: 1500, // 输入后到清空画布的间隔时间
   set: {
     // 设置第一次后的回调
     beforeRepeat: function () {
